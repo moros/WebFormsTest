@@ -12,6 +12,7 @@ using System.Web.Caching;
 using System.Web.Compilation;
 using System.Web.Configuration;
 using System.Web.Hosting;
+using System.Web.Services;
 using System.Web.SessionState;
 using System.Web.UI;
 
@@ -298,6 +299,25 @@ namespace Fritz.WebFormsTest
         }
 
         /// <summary>
+        /// Allows for a HttpContext to be injected into a ASMX service when testing a service that is using a context, a session, and other web related properties
+        /// that one would expect to be present while under test.
+        /// </summary>
+        /// <typeparam name="TService">A service that is typeof WebService from Microsoft's System.Web.Services namespace.</typeparam>
+        /// <param name="service">The service to inject context into.</param>
+        /// <param name="contextModifier">An optional action to modify the context if need be such as adding a session for example.</param>
+        public static void InjectContextIntoWebService<TService>(TService service, Action<HttpContext> contextModifier = null) where TService : WebService
+        {
+            var privateFields = typeof(WebService).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+            var privateMethods = typeof(WebService).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var location = LocateSourceFolder(service.GetType());
+            var serviceName = service.ToString();
+
+            //SetContext
+            SubstituteDummyHttpContext($"/{serviceName}.asmx");
+        }
+
+        /// <summary>
         /// This is the application object created typically by the "global.asax.cs" class
         /// </summary>
         public static HttpApplication Application
@@ -456,7 +476,10 @@ namespace Fritz.WebFormsTest
             byte[] debugHeader;
             var img = assemblyDef.MainModule.GetDebugHeader(out debugHeader);
             var pdbFilename = Encoding.ASCII.GetString(debugHeader.Skip(24).Take(debugHeader.Length - 25).ToArray());
+            pdbFilename = pdbFilename.Replace("\0", string.Empty);
+
             var pdbFile = new FileInfo(pdbFilename);
+            
             webFolder = pdbFile.Directory;
 
             while ((webFolder.GetFiles("*.csproj").Length == 0 && webFolder.GetFiles("*.vbproj").Length == 0))
