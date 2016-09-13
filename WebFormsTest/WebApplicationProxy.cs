@@ -224,24 +224,29 @@ namespace Fritz.WebFormsTest
         /// <returns>The Page object from the specified location</returns>
         public static object GetPageByLocation(string location, HttpBrowserCapabilities browserCaps, Action<HttpContext> contextModifiers = null)
         {
+            if (_Instance == null || !_Instance.Initialized)
+                throw new InvalidOperationException("The WebApplicationProxy has not been created and initialized properly");
 
-            if (_Instance == null || !_Instance.Initialized) throw new InvalidOperationException("The WebApplicationProxy has not been created and initialized properly");
-
+            // Ask the compiler on our proxy instance for the type determined from the given location.
             var returnType = _Instance._compiler.GetCompiledType(location);
+
+            // Create the TestHttpWorkerRequest.
             SubstituteDummyHttpContext(location);
 
-            if (contextModifiers != null) contextModifiers(HttpContext.Current);
-
+            // Invoke our context modifier if the action was given to us.
+            contextModifiers?.Invoke(HttpContext.Current);
+            
+            // Activate the instance of the specific return type.
             dynamic outObj = Activator.CreateInstance(returnType);
 
             // Prepare the page for testing
-            if (outObj is Page) ((Page)outObj).PrepareForTest();
+            var page = outObj as Page;
+            page?.PrepareForTest();
 
+            // Finish setting up the HttpContext.
             CompleteHttpContext(HttpContext.Current);
 
             return outObj;
-
-
         }
 
         /// <summary>
@@ -376,7 +381,6 @@ namespace Fritz.WebFormsTest
         /// </summary>
         internal static void SubstituteDummyHttpContext(string location, HttpBrowserCapabilities caps = null)
         {
-
             var workerRequest = new TestHttpWorkerRequest(location);
             var testContext = new HttpContext(workerRequest);
 
@@ -387,7 +391,6 @@ namespace Fritz.WebFormsTest
             testContext.Items["IsInTestMode"] = true;
 
             HttpContext.Current = testContext;
-
         }
 
         private static void CompleteHttpContext(HttpContext ctx)
