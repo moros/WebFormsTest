@@ -510,10 +510,17 @@ namespace Fritz.WebFormsTest
 
         private static void CreateHttpApplication()
         {
-
             // Create the Global / HttpApplication object
-            Type appType = GetHttpApplicationType();
-            WebApplicationProxy.Application = Activator.CreateInstance(appType) as HttpApplication;
+            var appType = GetHttpApplicationType();
+
+            try
+            {
+                Application = Activator.CreateInstance(appType) as HttpApplication;
+            }
+            catch (Exception ex)
+            {
+                throw new WebApplicationProxyException("Failed to set Application property on WebApplicationProxy; could not create instance from your application that is implementing the HttpApplication type. Please check the class in your appliction that is implementing the HttpApplication type; the default constructor is throwing an exception.", ex);
+            }
 
             // Create the HttpApplicationState
             Type asType = typeof(HttpApplicationState);
@@ -522,12 +529,9 @@ namespace Fritz.WebFormsTest
 
             // Inject the application state
             var theField = typeof(HttpApplication).GetField("_state", BindingFlags.NonPublic | BindingFlags.Instance);
-            theField.SetValue(WebApplicationProxy.Application, appState);
+            theField.SetValue(Application, appState);
 
-            TriggerApplicationStart(WebApplicationProxy.Application);
-
-
-
+            TriggerApplicationStart(Application);
         }
 
         private static void ReadWebConfig()
