@@ -31,29 +31,35 @@ namespace Fritz.WebFormsTest.Internal
     internal static void PrepareForTest(this Page myPage)
     {
 
-      var setIntMethod = _PageType.GetMethod("SetIntrinsics", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(HttpContext) }, null);
-      setIntMethod.Invoke(myPage, new object[] { HttpContext.Current });
+        var setIntMethod = _PageType.GetMethod("SetIntrinsics", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(HttpContext) }, null);
+        setIntMethod.Invoke(myPage, new object[] { HttpContext.Current });
 
-      // NOTE: This is a COMPLETE fake out and wrap around the generated code
-      var initMethod = _PageType.GetMethod("FrameworkInitialize", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.FlattenHierarchy);
-      initMethod.Invoke(myPage, null);
+        // NOTE: This is a COMPLETE fake out and wrap around the generated code
+        var initMethod = _PageType.GetMethod("FrameworkInitialize", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.FlattenHierarchy);
+        initMethod.Invoke(myPage, null);
 
-      // TODO: Add method for this
-      var hookupMethod = typeof(TemplateControl).GetMethod("HookUpAutomaticHandlers", BindingFlags.NonPublic | BindingFlags.Instance);
-      hookupMethod.Invoke(myPage, null);
+        // TODO: Add method for this
+        var hookupMethod = typeof(TemplateControl).GetMethod("HookUpAutomaticHandlers", BindingFlags.NonPublic | BindingFlags.Instance);
+        hookupMethod.Invoke(myPage, null);
 
-    // Disable EventValidation
-      myPage.EnableEventValidation = false;
+        // Disable EventValidation
+        myPage.EnableEventValidation = false;
 
-      var preInit = _PageType.GetMethod("OnPreInit", BindingFlags.NonPublic | BindingFlags.Instance);
-      preInit.Invoke(myPage, new object[] { EventArgs.Empty });
+        var preInit = _PageType.GetMethod("OnPreInit", BindingFlags.NonPublic | BindingFlags.Instance);
+        preInit.Invoke(myPage, new object[] { EventArgs.Empty });
 
-      // Grab a masterPage if in use
-      AddMasterPage(myPage);
+        // Grab a masterPage if in use
+        AddMasterPage(myPage);
 
-      var initRecursive = _PageType.GetMethod("InitRecursive", BindingFlags.Instance | BindingFlags.NonPublic);
-      initRecursive.Invoke(myPage, new object[] { null });
-
+        //HACK: Attempt to do a recursive init on the page.
+        try
+        {
+            var initRecursive = _PageType.GetMethod("InitRecursive", BindingFlags.Instance | BindingFlags.NonPublic);
+            initRecursive.Invoke(myPage, new object[] { null });
+        }
+        catch (Exception ex)
+        {
+        }
     }
 
     private static void AddMasterPage(Page myPage)
