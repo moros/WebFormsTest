@@ -1,20 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Fritz.WebFormsTest
 {
-
   /// <summary>
   /// A collection of extension methods to enhance the testability of WebControls
   /// </summary>
   public static class ControlExtensions
   {
+    public static Control FindControlRecurse(this Control control, string id)
+    {
+        if (control == null)
+            return null;
 
+        var ctrl = control.FindControl(id);
+
+        // ReSharper disable once InvertIf
+        if (ctrl == null)
+        {
+            foreach (Control child in control.Controls)
+            {
+                ctrl = FindControlRecurse(child, id);
+
+                if (ctrl != null)
+                    break;
+            }
+        }
+
+        return ctrl;
+    }
+        
     public static void FireEvent(this Control ctrl, string eventName, EventArgs args = null)
     {
 
@@ -44,8 +60,5 @@ namespace Fritz.WebFormsTest
       throw new ArgumentException($"Unable to find a suitable raise method to trigger the event {eventName}");
 
     }
-
-
   }
-
 }
