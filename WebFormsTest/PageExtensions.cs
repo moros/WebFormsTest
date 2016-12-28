@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Web;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 namespace Fritz.WebFormsTest
 {
@@ -118,6 +119,14 @@ namespace Fritz.WebFormsTest
             var thisMethod = _Type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
             thisMethod.Invoke(myPage, new object[] { args });
 
+        }
+
+        public static void InvokeClick<T>(this Page page, string controlName, EventArgs args) where T : class, IButtonControl, new()
+        {
+            var button = page.FindControlRecurse(controlName) as T;
+            var clickMethod = typeof(T).GetMethod("OnClick", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            clickMethod.Invoke(button, new object[] { args });
         }
 
         public static void RunToEvent(this Page myPage, WebFormEvent evt = WebFormEvent.None)
