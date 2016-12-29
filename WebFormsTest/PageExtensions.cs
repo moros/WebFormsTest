@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Web;
 using System.Web.UI;
+using Fritz.WebFormsTest.Internal;
 
 namespace Fritz.WebFormsTest
 {
@@ -70,6 +71,29 @@ namespace Fritz.WebFormsTest
             var hiddenMethod = _Type.GetMethod("ProcessPostData", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             hiddenMethod.Invoke(myPage, new object[] { postData, true });
 
+        }
+
+        /// <summary>
+        /// Allows system under test to simulate that the Page is valid without relying on the Validate method and validators.
+        /// Note, using this method mutates the Validators property to achieve the desired effect.
+        /// </summary>
+        /// <param name="myPage"></param>
+        /// <param name="isValid">The value that IsValid property on the page instance should return.</param>
+        public static void MockIsValid(this Page myPage, bool isValid)
+        {
+            var pageType = typeof(Page);
+
+            // Simulates that the page has been validated so that the call to IsValid does not throw an HttpException.
+            var validatedField = pageType.GetField("_validated", BindingFlags.NonPublic | BindingFlags.Instance);
+            validatedField?.SetValue(myPage, true);
+
+            // Null out the private _validators field that is backing the Validators property.
+            var validatorsField = pageType.GetField("_validators", BindingFlags.NonPublic | BindingFlags.Instance);
+            validatorsField?.SetValue(myPage, null);
+
+            // With the _validators nulled out, we know that the FakeValidator will be the only validator added to the collection. The read only
+            // property creates a new ValidatorCollection when its backing ivar is null.
+            myPage.Validators.Add(new FakeValidator(isValid));
         }
 
         public static void FireEvent(this Page myPage, WebFormEvent e)

@@ -102,6 +102,7 @@
     <Compile Include="ControlFireEventFixture.cs" />
     <Compile Include="Internal\VirtualPathFixture.cs" />
     <Compile Include="ModelBindingFixture.cs" />
+    <Compile Include="PageExtensionsFixture.cs" />
     <Compile Include="Postback.Auto.Fixture.cs" />
     <Compile Include="Postback.Simple.Fixture.cs" />
     <Compile Include="DefaultPageFixture.cs" />
