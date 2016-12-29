@@ -72,6 +72,7 @@
     <Compile Include="BrowserDefinitions.cs" />
     <Compile Include="ControlExtensions.cs" />
     <Compile Include="HttpContextExtensions.cs" />
+    <Compile Include="Internal\FakeValidator.cs" />
     <Compile Include="Internal\BrowserCapsExtensions.cs" />
     <Compile Include="Internal\BuildManagerWrapper.cs" />
     <Compile Include="Internal\HostingEnvironmentWrapper.cs" />
